@@ -77,14 +77,14 @@ async function downloadImage(filename) {
         });
         const value = await promise1
         console.log("deductMinutes checker: ", timeManager.deductMinutes)
-        //await sleep(2000);
+        await sleep(5000);
     } while (timeManager.deductMinutes > 0)
 };
 
 // console.log("testing download");
 // downloadImage('./Images/currentWeather.png').then(() => console.log('Image successfully downloaded @ ', new Date()));
 
-
+console.log("Bot Started.");
 //Pre Cached images
 setInterval(() => {
     console.log("-----Fetching images-----")
@@ -119,7 +119,8 @@ setInterval(() => {
                 sharp("./Images/currentWeatherOpacitySet.png")
                     .resize(853, 479)
                     //save the ammended currentWeather as currentWeatherNew
-                    .toFile("./Images/currentWeatherNew.png", () => {
+                    .toFile("./Images/currentWeatherNew.png")
+                    .then(() => {
                         console.log("currentWeatherNew DONE!")
                         //merge all the files when it is done.
                         sharp("./assets/base-853.png")
@@ -132,12 +133,14 @@ setInterval(() => {
                                 fs.unlinkSync("./Images/currentWeatherOpacitySet.png");
                                 console.log("-----Download completed here-----");
                             })
+
                     })
             })
+
             //}
         })
     //setting interval at 6mins each time
-}, 3000)
+}, 180000)
 
 bot.command("start", "help", (msg, reply) => {
 
