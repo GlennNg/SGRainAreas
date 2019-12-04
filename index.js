@@ -102,9 +102,6 @@ setInterval(() => {
     if (minutes < 10) {
         minutes = "0" + minutes;
     }
-    fs.unlinkSync('./Images/currentWeather.png');
-    fs.unlinkSync('./Images/currentWeatherNew.png');
-    fs.unlinkSync("./Images/currentWeatherOpacitySet.png");
 
     downloadImage('./Images/currentWeather.png')
         .then(() => {
@@ -129,6 +126,10 @@ setInterval(() => {
                             .composite([{ input: "./Images/currentWeatherNew.png", gravity: "northwest" }, { input: "./assets/MRT.png", gravity: "northwest" }])
                             .toFile("./Images/" + timeManager.lastUpdatedTime + ".jpg")
                             .then(() => {
+
+                                fs.unlinkSync('./Images/currentWeather.png');
+                                fs.unlinkSync('./Images/currentWeatherNew.png');
+                                fs.unlinkSync("./Images/currentWeatherOpacitySet.png");
                                 console.log("-----Download completed here-----");
                             })
                     })
@@ -136,7 +137,7 @@ setInterval(() => {
             //}
         })
     //setting interval at 6mins each time
-}, 180000)
+}, 3000)
 
 bot.command("start", "help", (msg, reply) => {
 
