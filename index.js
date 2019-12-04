@@ -24,8 +24,8 @@ async function sleep(msec) {
 async function downloadImage(filename) {
     let date_ob = new Date();
     //setting GMT +8
-    //date_ob.setHours(date_ob.getHours() + 8)
-    date_ob.setHours(date_ob.getHours())
+    date_ob.setHours(date_ob.getHours() + 8)
+    //date_ob.setHours(date_ob.getHours())
 
     do {
         console.log("Executing Do Loop for downloading of new images");
@@ -90,8 +90,8 @@ setInterval(() => {
     console.log("-----Fetching images-----")
     let date_ob = new Date();
     //setting GMT +8
-    //date_ob.setHours(date_ob.getHours() + 8)
-    date_ob.setHours(date_ob.getHours())
+    date_ob.setHours(date_ob.getHours() + 8)
+    //date_ob.setHours(date_ob.getHours())
     let hours = date_ob.getHours();
     if (hours < 10) {
         hours = "0" + hours;
@@ -102,6 +102,10 @@ setInterval(() => {
     if (minutes < 10) {
         minutes = "0" + minutes;
     }
+    fs.unlinkSync('./Images/currentWeather.png');
+    fs.unlinkSync('./Images/currentWeatherNew.png');
+    fs.unlinkSync("./Images/currentWeatherOpacitySet.png");
+
     downloadImage('./Images/currentWeather.png')
         .then(() => {
             console.log('Image successfully downloaded @ ', new Date())
@@ -132,7 +136,7 @@ setInterval(() => {
             //}
         })
     //setting interval at 6mins each time
-}, 30000)
+}, 180000)
 
 bot.command("start", "help", (msg, reply) => {
 
