@@ -24,8 +24,8 @@ async function sleep(msec) {
 async function downloadImage(filename) {
     let date_ob = new Date();
     //setting GMT +8
-    //date_ob.setHours(date_ob.getHours() + 8)
-    date_ob.setHours(date_ob.getHours())
+    date_ob.setHours(date_ob.getHours() + 8)
+    //date_ob.setHours(date_ob.getHours())
 
     do {
         console.log("Executing Do Loop for downloading of new images");
@@ -90,8 +90,8 @@ setInterval(() => {
     console.log("-----Fetching images-----")
     let date_ob = new Date();
     //setting GMT +8
-    //date_ob.setHours(date_ob.getHours() + 8)
-    date_ob.setHours(date_ob.getHours())
+    date_ob.setHours(date_ob.getHours() + 8)
+    //date_ob.setHours(date_ob.getHours())
     let hours = date_ob.getHours();
     if (hours < 10) {
         hours = "0" + hours;
