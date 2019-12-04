@@ -90,8 +90,8 @@ bot.command("CheckMeOut", (msg, reply, next) => {
 				//var stream2 = fs.createReadStream("./Images/currentWeather.png");
 				//reply.photo(stream2, "debugging photo");
 				//merging weather with base image
-                                sharp("./Images/base-853.png")
-                                    .composite([{ input: "./Images/currentWeather.png", gravity: "northwest" }, { input: "./Images/MRT.png", gravity: "northwest" }])
+                                sharp("./assets/base-853.png")
+                                    .composite([{ input: "./Images/currentWeather.png", gravity: "northwest" }, { input: "./assets/MRT.png", gravity: "northwest" }])
                                     .toFile("./Images/" +(date%2)+ hours + minutes + ".jpg", () => {
                                         var stream = fs.createReadStream("./Images/" +(date%2)+ hours + minutes + ".jpg");
 					//var stream2 = fs.createReadStream("./Images/currentWeather.png");
