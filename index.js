@@ -84,7 +84,7 @@ async function downloadImage(filename) {
 // console.log("testing download");
 // downloadImage('./Images/currentWeather.png').then(() => console.log('Image successfully downloaded @ ', new Date()));
 
-console.log("Bot Started.");
+console.log("Bot Started @", Date());
 //Pre Cached images
 setInterval(() => {
     console.log("-----Fetching images-----")
@@ -112,24 +112,23 @@ setInterval(() => {
             Jimp.read('./Images/currentWeather.png').then(data => {
                 //setOpacity and then write to a new fileName currentWeatherOpacitySet
                 data.opacity(0.35).write('./Images/currentWeatherOpacitySet.png', () => {
+
+                    console.log("currentWeatherOpacity exist? -", fs.existsSync('./Images/currentWeatherOpacitySet.png'));
                     //ammend currentWeather found into proper size
                     sharp("./Images/currentWeatherOpacitySet.png")
                         .resize(853, 479)
                         .png()
-                        //save the ammended currentWeather as currentWeatherNew
-                        .toFile("./Images/currentWeatherNew.png")
-                        .then(() => {
+                        //save the amended currentWeather as currentWeatherNew
+                        .toFile("./Images/currentWeatherNew.png", () => {
+                            console.log("currentWeatherNew exist? -", fs.existsSync('./Images/currentWeatherNew.png'));
                             console.log("currentWeatherNew DONE!")
                             //merge all the files when it is done.
                             sharp("./assets/base-853.png")
                                 .jpeg()
                                 .composite([{ input: "./Images/currentWeatherNew.png", gravity: "northwest" }, { input: "./assets/MRT.png", gravity: "northwest" }])
-                                .toFile("./Images/" + timeManager.lastUpdatedTime + ".jpg")
-                                .then(() => {
+                                .toFile("./Images/" + timeManager.lastUpdatedTime + ".jpg", () => {
+                                    console.log("Saved the image @", Date());
 
-                                    fs.unlinkSync('./Images/currentWeather.png');
-                                    fs.unlinkSync('./Images/currentWeatherNew.png');
-                                    fs.unlinkSync("./Images/currentWeatherOpacitySet.png");
                                     console.log("-----Download completed here-----");
                                 })
 
