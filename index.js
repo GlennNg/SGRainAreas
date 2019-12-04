@@ -24,8 +24,8 @@ async function sleep(msec) {
 async function downloadImage(filename) {
     let date_ob = new Date();
     //setting GMT +8
-    date_ob.setHours(date_ob.getHours() + 8)
-    //date_ob.setHours(date_ob.getHours())
+    //date_ob.setHours(date_ob.getHours() + 8)
+    date_ob.setHours(date_ob.getHours())
 
     do {
         console.log("Executing Do Loop for downloading of new images");
@@ -90,8 +90,8 @@ setInterval(() => {
     console.log("-----Fetching images-----")
     let date_ob = new Date();
     //setting GMT +8
-    date_ob.setHours(date_ob.getHours() + 8)
-    //date_ob.setHours(date_ob.getHours())
+    //date_ob.setHours(date_ob.getHours() + 8)
+    date_ob.setHours(date_ob.getHours())
     let hours = date_ob.getHours();
     if (hours < 10) {
         hours = "0" + hours;
@@ -106,38 +106,37 @@ setInterval(() => {
     downloadImage('./Images/currentWeather.png')
         .then(() => {
             console.log('Image successfully downloaded @ ', new Date())
-            console.log("./Images/" + String(hours + "" + minutes) + ".jpg")
-            //if (timeManager.lastUpdatedTime !== String(hours+""+minutes)) {
+            console.log("currentWeather exist? -", fs.existsSync('./Images/currentWeather.png'));
 
             //setOpacity
             Jimp.read('./Images/currentWeather.png').then(data => {
                 //setOpacity and then write to a new fileName currentWeatherOpacitySet
-                data.opacity(0.35).write('./Images/currentWeatherOpacitySet.png')
-                console.log("currentWeather DONE!")
-            }).then(() => {
-                //ammend currentWeather found into proper size
-                sharp("./Images/currentWeatherOpacitySet.png")
-                    .resize(853, 479)
-                    //save the ammended currentWeather as currentWeatherNew
-                    .toFile("./Images/currentWeatherNew.png")
-                    .then(() => {
-                        console.log("currentWeatherNew DONE!")
-                        //merge all the files when it is done.
-                        sharp("./assets/base-853.png")
-                            .composite([{ input: "./Images/currentWeatherNew.png", gravity: "northwest" }, { input: "./assets/MRT.png", gravity: "northwest" }])
-                            .toFile("./Images/" + timeManager.lastUpdatedTime + ".jpg")
-                            .then(() => {
+                data.opacity(0.35).write('./Images/currentWeatherOpacitySet.png', () => {
+                    //ammend currentWeather found into proper size
+                    sharp("./Images/currentWeatherOpacitySet.png")
+                        .resize(853, 479)
+                        .png()
+                        //save the ammended currentWeather as currentWeatherNew
+                        .toFile("./Images/currentWeatherNew.png")
+                        .then(() => {
+                            console.log("currentWeatherNew DONE!")
+                            //merge all the files when it is done.
+                            sharp("./assets/base-853.png")
+                                .jpeg()
+                                .composite([{ input: "./Images/currentWeatherNew.png", gravity: "northwest" }, { input: "./assets/MRT.png", gravity: "northwest" }])
+                                .toFile("./Images/" + timeManager.lastUpdatedTime + ".jpg")
+                                .then(() => {
 
-                                fs.unlinkSync('./Images/currentWeather.png');
-                                fs.unlinkSync('./Images/currentWeatherNew.png');
-                                fs.unlinkSync("./Images/currentWeatherOpacitySet.png");
-                                console.log("-----Download completed here-----");
-                            })
+                                    fs.unlinkSync('./Images/currentWeather.png');
+                                    fs.unlinkSync('./Images/currentWeatherNew.png');
+                                    fs.unlinkSync("./Images/currentWeatherOpacitySet.png");
+                                    console.log("-----Download completed here-----");
+                                })
 
-                    })
+                        })
+                })
             })
 
-            //}
         })
     //setting interval at 6mins each time
 }, 180000)
