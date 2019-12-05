@@ -8,6 +8,8 @@ var Jimp = require('jimp');
 var http = require('http');
 var Stream = require('stream').Transform;
 var fs = require('fs');
+var fs = require('fs-extra');   
+sharp.cache(false);
 
 const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
 
@@ -24,8 +26,8 @@ async function sleep(msec) {
 async function downloadImage(filename) {
     let date_ob = new Date();
     //setting GMT +8
-    date_ob.setHours(date_ob.getHours() + 8)
-    //date_ob.setHours(date_ob.getHours())
+    //date_ob.setHours(date_ob.getHours() + 8)
+    date_ob.setHours(date_ob.getHours())
 
     do {
         console.log("Executing Do Loop for downloading of new images");
@@ -64,6 +66,7 @@ async function downloadImage(filename) {
                 if (res.statusCode === 200) {
                     request(uri).pipe(fs.createWriteStream(filename)).on('close', () => {
                         timeManager.lastUpdatedTime = String(hours + "" + minutes)
+                        fs.copySync(filename, './downloadedImage.png');
                         console.log("lastUpdatedTime updated with: ", timeManager.lastUpdatedTime)
                         timeManager.deductMinutes = 0;
                         resolve();
@@ -82,7 +85,7 @@ async function downloadImage(filename) {
 };
 
 // console.log("testing download");
-// downloadImage('./Images/currentWeather.png').then(() => console.log('Image successfully downloaded @ ', new Date()));
+//downloadImage('./Images/currentWeather.png').then(() => console.log('Initial Run ', new Date()));
 
 console.log("Bot Started @", Date());
 //Pre Cached images
@@ -90,8 +93,8 @@ setInterval(() => {
     console.log("-----Fetching images-----")
     let date_ob = new Date();
     //setting GMT +8
-    date_ob.setHours(date_ob.getHours() + 8)
-    //date_ob.setHours(date_ob.getHours())
+    //date_ob.setHours(date_ob.getHours() + 8)
+    date_ob.setHours(date_ob.getHours())
     let hours = date_ob.getHours();
     if (hours < 10) {
         hours = "0" + hours;
@@ -106,14 +109,14 @@ setInterval(() => {
     downloadImage('./Images/currentWeather.png')
         .then(() => {
             console.log('Image successfully downloaded @ ', new Date())
-            console.log("currentWeather exist? -", fs.existsSync('./Images/currentWeather.png'));
+            console.log("currentWeather download done, and exist? -", fs.existsSync('./Images/currentWeather.png'));
 
             //setOpacity
             Jimp.read('./Images/currentWeather.png').then(data => {
                 //setOpacity and then write to a new fileName currentWeatherOpacitySet
-                data.opacity(0.35).write('./Images/currentWeatherOpacitySet.png', () => {
+                return data.opacity(0.35).write('./Images/currentWeatherOpacitySet.png', () => {
 
-                    console.log("currentWeatherOpacity exist? -", fs.existsSync('./Images/currentWeatherOpacitySet.png'));
+                    console.log("currentWeatherOpacity done, and exist? -", fs.existsSync('./Images/currentWeatherOpacitySet.png'));
                     //ammend currentWeather found into proper size
                     sharp("./Images/currentWeatherOpacitySet.png")
                         .resize(853, 479)
@@ -124,11 +127,20 @@ setInterval(() => {
                             console.log("currentWeatherNew DONE!")
                             //merge all the files when it is done.
                             sharp("./assets/base-853.png")
-                                .jpeg()
                                 .composite([{ input: "./Images/currentWeatherNew.png", gravity: "northwest" }, { input: "./assets/MRT.png", gravity: "northwest" }])
+                                .jpeg()
                                 .toFile("./Images/" + timeManager.lastUpdatedTime + ".jpg", () => {
-                                    console.log("Saved the image @", Date());
+                                    console.log("Image merged @", Date());
 
+                                    fs.unlinkSync("./Images/currentWeather.png");
+                                    console.log("currentWeather exist after delete? -", fs.existsSync('./Images/currentWeather.png'));
+
+                                    fs.unlinkSync("./Images/currentWeatherOpacitySet.png");
+                                    console.log("currentWeatherOpacitySet exist after delete? -", fs.existsSync('./Images/currentWeatherOpacitySet.png'));
+                                    
+                                    //fs.unlinkSync("./Images/currentWeatherNew.png");
+                                    //console.log("currentWeatherNew exist after delete? -", fs.existsSync('./Images/currentWeatherNew.png'));
+                                    
                                     console.log("-----Download completed here-----");
                                 })
 
