@@ -7,12 +7,13 @@ var request = require('request');
 var Jimp = require('jimp');
 var http = require('http');
 var Stream = require('stream').Transform;
-var fs = require('fs');
+//var fs = require('fs');
 var fs = require('fs-extra');   
 sharp.cache(false);
 
 const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
-
+//Testee_botbot
+//const bot = botgram("1031143021:AAEFdSnIkS5pznXPBy9t-N5f5PRqj-p6eC4")
 var timeManager = {
     //predefined deduction
     deductMinutes: 0,
@@ -115,32 +116,18 @@ setInterval(() => {
             Jimp.read('./Images/currentWeather.png').then(data => {
                 //setOpacity and then write to a new fileName currentWeatherOpacitySet
                 return data.opacity(0.35).write('./Images/currentWeatherOpacitySet.png', () => {
-
-                    console.log("currentWeatherOpacity done, and exist? -", fs.existsSync('./Images/currentWeatherOpacitySet.png'));
                     //ammend currentWeather found into proper size
                     sharp("./Images/currentWeatherOpacitySet.png")
                         .resize(853, 479)
                         .png()
                         //save the amended currentWeather as currentWeatherNew
                         .toFile("./Images/currentWeatherNew.png", () => {
-                            console.log("currentWeatherNew exist? -", fs.existsSync('./Images/currentWeatherNew.png'));
-                            console.log("currentWeatherNew DONE!")
                             //merge all the files when it is done.
                             sharp("./assets/base-853.png")
-                                .composite([{ input: "./Images/currentWeatherNew.png", gravity: "northwest" }, { input: "./assets/MRT.png", gravity: "northwest" }])
+                                .composite([{ input: "./Images/currentWeatherNew.png", gravity: "northwest" }, { input: "./assets/MRT.png", gravity: "northwest" }, { input: "./assets/rain-intensity.jpg", gravity: "south" }])
                                 .jpeg()
                                 .toFile("./Images/" + timeManager.lastUpdatedTime + ".jpg", () => {
                                     console.log("Image merged @", Date());
-
-                                    fs.unlinkSync("./Images/currentWeather.png");
-                                    console.log("currentWeather exist after delete? -", fs.existsSync('./Images/currentWeather.png'));
-
-                                    fs.unlinkSync("./Images/currentWeatherOpacitySet.png");
-                                    console.log("currentWeatherOpacitySet exist after delete? -", fs.existsSync('./Images/currentWeatherOpacitySet.png'));
-                                    
-                                    //fs.unlinkSync("./Images/currentWeatherNew.png");
-                                    //console.log("currentWeatherNew exist after delete? -", fs.existsSync('./Images/currentWeatherNew.png'));
-                                    
                                     console.log("-----Download completed here-----");
                                 })
 
@@ -158,13 +145,13 @@ bot.command("start", "help", (msg, reply) => {
 })
 
 bot.command("CheckMeOut", (msg, reply, next) => {
-    reply.text("Image loading, please wait...");
+    console.log(msg.chat.name,"submitted a request for rain updates on:", Date());
+    reply.text("Rain areas in Singapore loading, please wait...");
     var stream = fs.createReadStream("./Images/" + timeManager.lastUpdatedTime + ".jpg");
-    reply.photo(stream, msg.chat.name + ", here's the update. Latest update @ " + timeManager.lastUpdatedTime + "hrs.");
+    reply.photo(stream, "Hello, " + msg.chat.name + ", here's the latest rain conditions. Last updatd @ " + timeManager.lastUpdatedTime + "hrs.");
 
 })
 
 bot.command((msg, reply) => {
-    console.log("Testing!");
-    reply.text("Invalid command.");
+    reply.text("Please refer to the commands available from /start");
 })
