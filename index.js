@@ -17,7 +17,8 @@ const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
 var timeManager = {
     //predefined deduction
     deductMinutes: 0,
-    lastUpdatedTime: "0000"
+    lastUpdatedTime: "0000",
+    lastDownloadedTime: "0000"
 };
 
 //useless sleep?!
@@ -66,9 +67,9 @@ async function downloadImage(filename) {
                 //stuck here
                 if (res.statusCode === 200) {
                     request(uri).pipe(fs.createWriteStream(filename)).on('close', () => {
-                        timeManager.lastUpdatedTime = String(hours + "" + minutes)
+                        timeManager.lastDownloadedTime = String(hours + "" + minutes)
                         fs.copySync(filename, './downloadedImage.png');
-                        console.log("lastUpdatedTime updated with: ", timeManager.lastUpdatedTime)
+                        console.log("lastDownloadedTime updated with: ", timeManager.lastDownloadedTime)
                         timeManager.deductMinutes = 0;
                         resolve();
                     });
@@ -126,7 +127,8 @@ setInterval(() => {
                             sharp("./assets/base-853.png")
                                 .composite([{ input: "./Images/currentWeatherNew.png", gravity: "northwest" }, { input: "./assets/MRT.png", gravity: "northwest" }, { input: "./assets/rain-intensity.jpg", gravity: "south" }])
                                 .jpeg()
-                                .toFile("./Images/" + timeManager.lastUpdatedTime + ".jpg", () => {
+                                .toFile("./Images/" + timeManager.lastDownloadedTime + ".jpg", () => {
+                                    timeManager.lastUpdatedTime = timeManager.lastDownloadedTime;
                                     console.log("Image merged @", Date());
                                     console.log("-----Download completed here-----");
                                 })
@@ -145,10 +147,10 @@ bot.command("start", "help", (msg, reply) => {
 })
 
 bot.command("CheckMeOut", (msg, reply, next) => {
-    console.log(msg.chat.name,"submitted a request for rain updates on:", Date());
+    console.log("##### "+msg.chat.name,"submitted a request for rain updates on:", Date(), "#####");
     reply.text("Rain areas in Singapore loading, please wait...");
     var stream = fs.createReadStream("./Images/" + timeManager.lastUpdatedTime + ".jpg");
-    reply.photo(stream, "Hello, " + msg.chat.name + ", here's the latest rain conditions. Last updatd @ " + timeManager.lastUpdatedTime + "hrs.");
+    reply.photo(stream, "Hello " + msg.chat.name + ", here's the latest rain conditions. Last updatd @ " + timeManager.lastUpdatedTime + "hrs.");
 
 })
 

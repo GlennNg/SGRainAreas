@@ -14,7 +14,8 @@
     "fs-extra": "^8.1.0",
     "images": "^3.0.2",
     "jimp": "^0.9.3",
+    "nodemon": "^2.0.2",
     "request-promise": "^4.2.5",
-    "sharp": "^0.23.3"
+    "sharp": "^0.23.4"
   }
 }
