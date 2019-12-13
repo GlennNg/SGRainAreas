@@ -11,10 +11,10 @@ var Stream = require('stream').Transform;
 var fs = require('fs-extra');
 sharp.cache(false);
 
-const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
+//const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
 
 //Testee_botbot
-//const bot = botgram("1031143021:AAEFdSnIkS5pznXPBy9t-N5f5PRqj-p6eC4")
+const bot = botgram("1031143021:AAEFdSnIkS5pznXPBy9t-N5f5PRqj-p6eC4")
 var timeManager = {
     //predefined deduction
     deductMinutes: 0,
@@ -162,21 +162,22 @@ bot.command((msg, reply) => {
 bot.context({
     onInterval: false,
     HoursToAlert: [],
-    lastSent: 1
+    lastSent: 1,
+    presses: 0
 });
 //setting Interval hours to send updates
 bot.command("setInterval", (msg, reply, next) => {
 
-    console.log("##### " + msg.chat.name, "submitted a request scheduled updates on:", Date(), "#####");
+    console.log("##### " + msg.chat.name + " submitted a request scheduled updates on:", Date(), "#####");
     //enable Interval
     msg.context.onInterval = true;
     if (isNaN(parseInt(msg.args(2))) || parseInt(msg.args(2)) > 24) {
-        reply.text("Your interval duration should be below 24 hours or a number, try again.");
+        reply.text("Your interval duration should be below 24 hours and a number, try again.");
         return;
     }
     else {
         msg.Interval = parseInt(msg.args(2))
-        reply.text("Scheduled rain areas updates at every:", msg.Interval, "hour.")
+        reply.text("Scheduled rain areas updates at every: " + msg.Interval + " hour.")
         //engage Loop for Interval sendings
         engageLoop(reply, msg);
     }
@@ -199,7 +200,9 @@ bot.command("stopInterval", (msg, reply, next) => {
     reply.text("Stopped Interval");
 });
 
+//setting up AutoAlerts by the hour-clock
 bot.command("AutoAlert", (msg, reply, next) => {
+
     console.log("##### " + msg.chat.name, "submitted a request for AutoAlert:", Date(), "#####");
     //enable Interval
     if (isNaN(parseInt(msg.args(2))) || parseInt(msg.args(2)) > 24) {
@@ -211,12 +214,17 @@ bot.command("AutoAlert", (msg, reply, next) => {
         return;
     }
     else {
-        msg.context.HoursToAlert.push(parseInt(msg.args(2)))
-        reply.text("Adding HOUR " + parseInt(msg.args(2)) + ", into Auto Alert.")
-        if (msg.context.HoursToAlert.length <= 1) {
+        if (msg.context.HoursToAlert.length < 1) {
+
+            msg.context.HoursToAlert = [];
+            msg.context.HoursToAlert.push(parseInt(msg.args(2)))
+            reply.text("Adding HOUR " + parseInt(msg.args(2)) + ", into Auto Alert.")
             reply.text("Starting Auto Alerts")
             //engage Loop for Interval sendings
             engageAlert(reply, msg);
+        }else{
+            msg.context.HoursToAlert.push(parseInt(msg.args(2)))
+            reply.text("Adding HOUR " + parseInt(msg.args(2)) + ", into Auto Alert.")
         }
     }
 })
@@ -236,8 +244,12 @@ async function engageAlert(reply, msg) {
     }
 }
 bot.command("stopAutoAlert", (msg, reply, next) => {
-    //disable autoAlerts
+    //disable autoAlerts by clearing array
     msg.context.HoursToAlert = [];
     reply.text("Auto alerts has been stopped and cleared.");
     console.log("-----Disengaing auto alerts-----")
 });
+bot.command("contextinfo", (msg, reply, next) => {
+    reply.text("onInterval: " + msg.context.onInterval + "\nHoursToAlert: " + msg.context.HoursToAlert + "\nlastSent: " + msg.context.lastSent + "\nPresses: " + msg.context.presses)
+    console.log(msg.context);
+})
