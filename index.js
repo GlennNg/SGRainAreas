@@ -8,10 +8,11 @@ var Jimp = require('jimp');
 var http = require('http');
 var Stream = require('stream').Transform;
 //var fs = require('fs');
-var fs = require('fs-extra');   
+var fs = require('fs-extra');
 sharp.cache(false);
 
 const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
+
 //Testee_botbot
 //const bot = botgram("1031143021:AAEFdSnIkS5pznXPBy9t-N5f5PRqj-p6eC4")
 var timeManager = {
@@ -141,19 +142,102 @@ setInterval(() => {
     //setting interval at 6mins each time
 }, 180000)
 
+//Documentation
 bot.command("start", "help", (msg, reply) => {
-
-    reply.text("The following are the commands to check out rain areas in Singapore:\n/CheckMeOut")
+    reply.text("The following are the commands to check out rain areas in Singapore:\n/CheckMeOut - Get rain updates\n/setInterval <1-24> - Setting interval updates of rain areas (e.g., /setInterval 1) [GROUP CHAT ONLY]\n/stopInterval - Terminate interval updates (GROUP CHAT ONLY)\n/autoAlerts <0-23> - Starting Auto alerts to be sent by the HOUR clock (e.g., /autoAlert 5) (GROUP CHAT ONLY)\n/stopAutoAlert - Terminating all AutoAlert scheduled (GROUP CHAT ONLY)")
 })
 
+//basic Rain Area check
 bot.command("CheckMeOut", (msg, reply, next) => {
-    console.log("##### "+msg.chat.name,"submitted a request for rain updates on:", Date(), "#####");
+    console.log("##### " + msg.chat.name, "submitted a request for rain updates on:", Date(), "#####");
     reply.text("Rain areas in Singapore loading, please wait...");
     var stream = fs.createReadStream("./Images/" + timeManager.lastUpdatedTime + ".jpg");
     reply.photo(stream, "Hello " + msg.chat.name + ", here's the latest rain conditions. Last updated @ " + timeManager.lastUpdatedTime + "hrs.");
-
 })
-
+//any other commands
 bot.command((msg, reply) => {
     reply.text("Please refer to the commands available from /start");
 })
+
+bot.context({
+    onInterval: false,
+    HoursToAlert: [],
+    lastSent: 1
+});
+//setting Interval hours to send updates
+bot.command("setInterval", (msg, reply, next) => {
+
+    console.log("##### " + msg.chat.name, "submitted a request scheduled updates on:", Date(), "#####");
+    //enable Interval
+    msg.context.onInterval = true;
+    if (isNaN(parseInt(msg.args(2))) || parseInt(msg.args(2)) > 24) {
+        reply.text("Your interval duration should be below 24 hours or a number, try again.");
+        return;
+    }
+    else {
+        msg.Interval = parseInt(msg.args(2))
+        reply.text("Scheduled rain areas updates at every:", msg.Interval, "hour.")
+        //engage Loop for Interval sendings
+        engageLoop(reply, msg);
+    }
+})
+//Sending intervals by Hours
+async function engageLoop(reply, msg) {
+    while (msg.context.onInterval) {
+        //setting interval of hours into ms
+        await sleep(msg.Interval * 3600000)
+        if (msg.context.onInterval) {
+            reply.text("Rain areas in Singapore loading, please wait...");
+            var stream = fs.createReadStream("./Images/" + timeManager.lastUpdatedTime + ".jpg");
+            reply.photo(stream, "Hello " + msg.chat.name + ", here's the latest rain conditions. Last updated @ " + timeManager.lastUpdatedTime + "hrs.");
+        }
+    }
+}
+bot.command("stopInterval", (msg, reply, next) => {
+    //disable Interval
+    msg.context.onInterval = false;
+    reply.text("Stopped Interval");
+});
+
+bot.command("AutoAlert", (msg, reply, next) => {
+    console.log("##### " + msg.chat.name, "submitted a request for AutoAlert:", Date(), "#####");
+    //enable Interval
+    if (isNaN(parseInt(msg.args(2))) || parseInt(msg.args(2)) > 24) {
+        reply.text("Your interval duration should be below 24 hours or a number, try again.");
+        return;
+    }
+    else if (msg.context.HoursToAlert.includes(parseInt(msg.args(2)))) {
+        reply.text("Hour " + parseInt(msg.args(2)) + " has already been added.");
+        return;
+    }
+    else {
+        msg.context.HoursToAlert.push(parseInt(msg.args(2)))
+        reply.text("Adding HOUR " + parseInt(msg.args(2)) + ", into Auto Alert.")
+        if (msg.context.HoursToAlert.length <= 1) {
+            reply.text("Starting Auto Alerts")
+            //engage Loop for Interval sendings
+            engageAlert(reply, msg);
+        }
+    }
+})
+//Sending AutoAlerts
+async function engageAlert(reply, msg) {
+    console.log("-----Engaing auto alerts-----")
+    while (msg.context.HoursToAlert.length >= 1) {
+        //check for time every 30mins
+        await sleep(900000)
+        if (msg.context.HoursToAlert.length >= 1 && msg.context.HoursToAlert.includes(new Date().getHours()) && new Date().getHours() !== msg.context.lastSent) {
+            console.log("-----Auto alert sent @", Date(), "-----")
+            reply.text("Auto alert for rain areas generating...");
+            var stream = fs.createReadStream("./Images/" + timeManager.lastUpdatedTime + ".jpg");
+            reply.photo(stream, "Here's the latest rain conditions. Last updated @ " + timeManager.lastUpdatedTime + "hrs.");
+            msg.context.lastSent = new Date().getHours();
+        }
+    }
+}
+bot.command("stopAutoAlert", (msg, reply, next) => {
+    //disable autoAlerts
+    msg.context.HoursToAlert = [];
+    reply.text("Auto alerts has been stopped and cleared.");
+    console.log("-----Disengaing auto alerts-----")
+});
