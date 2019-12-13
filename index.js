@@ -224,7 +224,7 @@ bot.command("AutoAlert", (msg, reply, next) => {
 async function engageAlert(reply, msg) {
     console.log("-----Engaing auto alerts-----")
     while (msg.context.HoursToAlert.length >= 1) {
-        //check for time every 30mins
+        //check for time every 15mins
         await sleep(900000)
         if (msg.context.HoursToAlert.length >= 1 && msg.context.HoursToAlert.includes(new Date().getHours()) && new Date().getHours() !== msg.context.lastSent) {
             console.log("-----Auto alert sent @", Date(), "-----")
