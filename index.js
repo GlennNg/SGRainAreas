@@ -150,7 +150,7 @@ bot.command("CheckMeOut", (msg, reply, next) => {
     console.log("##### "+msg.chat.name,"submitted a request for rain updates on:", Date(), "#####");
     reply.text("Rain areas in Singapore loading, please wait...");
     var stream = fs.createReadStream("./Images/" + timeManager.lastUpdatedTime + ".jpg");
-    reply.photo(stream, "Hello " + msg.chat.name + ", here's the latest rain conditions. Last updatd @ " + timeManager.lastUpdatedTime + "hrs.");
+    reply.photo(stream, "Hello " + msg.chat.name + ", here's the latest rain conditions. Last updated @ " + timeManager.lastUpdatedTime + "hrs.");
 
 })
 
