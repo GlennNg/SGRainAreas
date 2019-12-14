@@ -265,6 +265,7 @@ bot.command("findHDBCarpark", (msg, reply, next) => {
             console.log("Encountered an error during keyboard creation for user: " + msg.chat.name + " / @" + msg.chat.username)
             return;
         }
+        reply.keyboard().text("Location sent!");
     })
 })
 
