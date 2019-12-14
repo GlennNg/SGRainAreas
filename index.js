@@ -9,6 +9,7 @@ var http = require('http');
 var Stream = require('stream').Transform;
 //var fs = require('fs');
 var fs = require('fs-extra');
+var geo = require('./GeoCompute')
 sharp.cache(false);
 
 const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
@@ -144,26 +145,24 @@ setInterval(() => {
 
 //Documentation
 bot.command("start", "help", (msg, reply) => {
-    reply.text("The following are the commands to check out rain areas in Singapore:\n/CheckMeOut - Get rain updates\n/setInterval <1-24> - Setting interval updates of rain areas (e.g., /setInterval 1) [GROUP CHAT ONLY]\n/stopInterval - Terminate interval updates (GROUP CHAT ONLY)\n/autoAlerts <0-23> - Starting Auto alerts to be sent by the HOUR clock (e.g., /autoAlert 5) (GROUP CHAT ONLY)\n/stopAutoAlert - Terminating all AutoAlert scheduled (GROUP CHAT ONLY)")
+    reply.text("The following are the commands to check out rain areas in Singapore:\n/rainCheck - Get rain updates\n/setInterval <1-24> - Setting interval updates of rain areas (e.g., /setInterval 1)\n/stopInterval - Terminate interval updates\n/autoAlerts <0-23> - Starting Auto alerts to be sent by the HOUR clock (e.g., /autoAlert 5)\n/stopAutoAlert - Terminating all AutoAlert scheduled\n/findHDBCarpark - Look for the nearest HDB carparks and its details (PRIVATE CHAT ONLY)")
 })
 
 //basic Rain Area check
-bot.command("CheckMeOut", (msg, reply, next) => {
+bot.command("rainCheck", (msg, reply, next) => {
     console.log("##### " + msg.chat.name, "submitted a request for rain updates on:", Date(), "#####");
     reply.text("Rain areas in Singapore loading, please wait...");
     var stream = fs.createReadStream("./Images/" + timeManager.lastUpdatedTime + ".jpg");
     reply.photo(stream, "Hello " + msg.chat.name + ", here's the latest rain conditions. Last updated @ " + timeManager.lastUpdatedTime + "hrs.");
 })
-//any other commands
-bot.command((msg, reply) => {
-    reply.text("Please refer to the commands available from /start");
-})
+
 
 bot.context({
     onInterval: false,
     HoursToAlert: [],
     lastSent: 1,
-    presses: 0
+    presses: 0,
+    msgId: null
 });
 //setting Interval hours to send updates
 bot.command("setInterval", (msg, reply, next) => {
@@ -222,7 +221,7 @@ bot.command("AutoAlert", (msg, reply, next) => {
             reply.text("Starting Auto Alerts")
             //engage Loop for Interval sendings
             engageAlert(reply, msg);
-        }else{
+        } else {
             msg.context.HoursToAlert.push(parseInt(msg.args(2)))
             reply.text("Adding HOUR " + parseInt(msg.args(2)) + ", into Auto Alert.")
         }
@@ -250,6 +249,59 @@ bot.command("stopAutoAlert", (msg, reply, next) => {
     console.log("-----Disengaing auto alerts-----")
 });
 bot.command("contextinfo", (msg, reply, next) => {
-    reply.text("onInterval: " + msg.context.onInterval + "\nHoursToAlert: " + msg.context.HoursToAlert + "\nlastSent: " + msg.context.lastSent + "\nPresses: " + msg.context.presses)
+    reply.text("onInterval: " + msg.context.onInterval + "\nHoursToAlert: " + msg.context.HoursToAlert + "\nlastSent: " + msg.context.lastSent + "\nPresses: " + msg.context.presses + "\nmsgId: " + msg.context.msgId)
     console.log(msg.context);
+})
+
+bot.command("findHDBCarpark", (msg, reply, next) => {
+    reply.selective(false);
+    msg.context.msgId = msg.id;
+    var keyboard1 = [
+        [{ text: "Send my location", request: "location" }]
+    ];
+    // Display the keyboard
+    reply.keyboard(keyboard1, true).text("What are you right now?").then((error, result) => {
+        if (error) {
+            console.log("Encountered an error during keyboard creation for user: " + msg.chat.name + " / @" + msg.chat.username)
+            return;
+        }
+    })
+})
+
+bot.all(function (msg, reply, next) {
+    console.log("##### " + msg.chat.name, "submitted a request for findHDBCarpark @", Date(), "#####");
+    // If we didn't echo this message, we can't edit it either
+    if (!msg.context.msgId === msg.id) return;
+    // If this is a text message, edit it
+    if (msg.type === "location") {
+        //console.log("User's location: " + msg.latitude + " : " + msg.longitude);
+        var NearestCarpark = [];
+        for (var index = 0; index < geo.MyData.length; index++) {
+            var distance = geo.converter.calcDistance(msg.latitude, msg.longitude, geo.MyData[index].lat, geo.MyData[index].long, "K")
+            //Checking if the distance between the carpark searching is below 1KM
+            if (distance <= 1) {
+                geo.MyData[index].distance = Math.round(distance * 100) / 100
+                NearestCarpark.push(geo.MyData[index]);
+            }
+        }
+        NearestCarpark.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+        //concatenate result strings
+        var msgResult = "5 Nearest carpark\n";
+        for (var i = 0; i < 5; i++) {
+            msgResult += "----- Carpark: " + (i + 1) + " -----\n"
+            msgResult += "Address: <a href =\'https://www.google.com/maps/search/?api=1&query=" + NearestCarpark[i].lat + "," + NearestCarpark[i].long + "\'>" + NearestCarpark[i].address + "</a>\n"
+            msgResult += "Carpark Type: " + NearestCarpark[i].carpark_Type + "\n"
+            msgResult += "Payment Mode: " + NearestCarpark[i].payment_mode + "\n"
+            msgResult += "Parking Type: " + NearestCarpark[i].shortterm_parking + "\n"
+            msgResult += "Distance: " + NearestCarpark[i].distance + "km\n\n"
+        }
+        //console.log(bot);
+        reply.disablePreview(true);
+        reply.html(msgResult)
+        msg.context.msgId = null;
+    }
+});
+//any other commands
+bot.command((msg, reply) => {
+    reply.text("Please refer to the commands available from /start");
 })

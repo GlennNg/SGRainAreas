@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "botgram": "^2.2.0",
+    "csv": "^0.3.7",
     "flag": "^4.4.0",
     "fs-extra": "^8.1.0",
     "images": "^3.0.2",
