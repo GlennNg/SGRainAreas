@@ -7,15 +7,15 @@ var request = require('request');
 var Jimp = require('jimp');
 var http = require('http');
 var Stream = require('stream').Transform;
-//var fs = require('fs');
 var fs = require('fs-extra');
 var geo = require('./GeoCompute')
 sharp.cache(false);
 
-const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
+//const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
 
 //Testee_botbot
-//const bot = botgram("1031143021:AAEFdSnIkS5pznXPBy9t-N5f5PRqj-p6eC4")
+const bot = botgram("1031143021:AAEFdSnIkS5pznXPBy9t-N5f5PRqj-p6eC4")
+
 var timeManager = {
     //predefined deduction
     deductMinutes: 0,
@@ -87,9 +87,6 @@ async function downloadImage(filename) {
         await sleep(5000);
     } while (timeManager.deductMinutes > 0)
 };
-
-// console.log("testing download");
-//downloadImage('./Images/currentWeather.png').then(() => console.log('Initial Run ', new Date()));
 
 console.log("Bot Started @", Date());
 //Pre Cached images
@@ -254,6 +251,10 @@ bot.command("contextinfo", (msg, reply, next) => {
 })
 
 bot.command("findHDBCarpark", (msg, reply, next) => {
+    if(msg.chat.type === "group"){
+        reply.text("[INFO] Searching for nearest HDB carparks is available only on private chats.")
+        return
+    }
     reply.selective(false);
     msg.context.msgId = msg.id;
     var keyboard1 = [
@@ -265,11 +266,12 @@ bot.command("findHDBCarpark", (msg, reply, next) => {
             console.log("Encountered an error during keyboard creation for user: " + msg.chat.name + " / @" + msg.chat.username)
             return;
         }
-        reply.keyboard().text("Location sent!");
     })
 })
 
 bot.all(function (msg, reply, next) {
+    //removing keyboard
+    reply.keyboard().text("Location sent!");
     console.log("##### " + msg.chat.name, "submitted a request for findHDBCarpark @", Date(), "#####");
     // If we didn't echo this message, we can't edit it either
     if (!msg.context.msgId === msg.id) return;
