@@ -251,7 +251,9 @@ bot.command("contextinfo", (msg, reply, next) => {
 })
 
 bot.command("findHDBCarpark", (msg, reply, next) => {
-    if(msg.chat.type === "group"){
+    console.log("##### " + msg.chat.name, "submitted a request for findHDBCarpark @", Date(), "#####");
+    console.log('Group type: ' + msg.chat.type)
+    if(msg.chat.type !== "private"){
         reply.text("[INFO] Searching for nearest HDB carparks is available only on private chats.")
         return
     }
@@ -270,13 +272,12 @@ bot.command("findHDBCarpark", (msg, reply, next) => {
 })
 
 bot.all(function (msg, reply, next) {
-    //removing keyboard
-    reply.keyboard().text("Location sent!");
-    console.log("##### " + msg.chat.name, "submitted a request for findHDBCarpark @", Date(), "#####");
     // If we didn't echo this message, we can't edit it either
     if (!msg.context.msgId === msg.id) return;
     // If this is a text message, edit it
     if (msg.type === "location") {
+        //removing keyboard
+        reply.keyboard().text("Location sent!");
         //console.log("User's location: " + msg.latitude + " : " + msg.longitude);
         var NearestCarpark = [];
         for (var index = 0; index < geo.MyData.length; index++) {
