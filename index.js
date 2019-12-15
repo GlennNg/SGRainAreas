@@ -253,7 +253,7 @@ bot.command("contextinfo", (msg, reply, next) => {
 bot.command("findHDBCarpark", (msg, reply, next) => {
     console.log("##### " + msg.chat.name, "submitted a request for findHDBCarpark @", Date(), "#####");
     console.log('Group type: ' + msg.chat.type)
-    if(msg.chat.type !== "private"){
+    if(msg.chat.type !== "user"){
         reply.text("[INFO] Searching for nearest HDB carparks is available only on private chats.")
         return
     }
@@ -296,7 +296,7 @@ bot.all(function (msg, reply, next) {
             msgResult += "Address: <a href =\'https://www.google.com/maps/search/?api=1&query=" + NearestCarpark[i].lat + "," + NearestCarpark[i].long + "\'>" + NearestCarpark[i].address + "</a>\n"
             msgResult += "Carpark Type: " + NearestCarpark[i].carpark_Type + "\n"
             msgResult += "Payment Mode: " + NearestCarpark[i].payment_mode + "\n"
-            msgResult += "Parking Type: " + NearestCarpark[i].shortterm_parking + "\n"
+            msgResult += "Short Parking: " + NearestCarpark[i].shortterm_parking + "\n"
             msgResult += "Distance: " + NearestCarpark[i].distance + "km\n\n"
         }
         //console.log(bot);
