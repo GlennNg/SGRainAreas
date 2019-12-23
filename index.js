@@ -20,7 +20,8 @@ var timeManager = {
     //predefined deduction
     deductMinutes: 0,
     lastUpdatedTime: "0000",
-    lastDownloadedTime: "0000"
+    lastDownloadedTime: "0000",
+    BotStartTime: null
 };
 
 //useless sleep?!
@@ -34,7 +35,7 @@ async function downloadImage(filename) {
     date_ob.setHours(date_ob.getHours())
 
     do {
-        console.log("Executing Do Loop for downloading of new images");
+        //console.log("Executing Do Loop for downloading of new images");
         date_ob.setMinutes(date_ob.getMinutes() - timeManager.deductMinutes)
         // adjust 0 before single digit date
         let date = ("0" + date_ob.getDate()).slice(-2);
@@ -55,7 +56,7 @@ async function downloadImage(filename) {
             minutes = "0" + minutes;
         }
         var uri = 'http://www.weather.gov.sg/files/rainarea/50km/v2/dpsri_70km_' + year + month + date + hours + minutes + '0000dBR.dpsri.png';
-        console.log(uri);
+        //console.log(uri);
 
         var promise1 = new Promise(function (resolve, reject) {
             request.head(uri, function (err, res, body) {
@@ -64,14 +65,14 @@ async function downloadImage(filename) {
                     console.log(err)
                     reject(err);
                 }
-                console.log("Status code: " + res.statusCode);
-                console.log("datetime: " + year + month + date + hours + minutes);
+                //console.log("Status code: " + res.statusCode);
+                //console.log("datetime: " + year + month + date + hours + minutes);
                 //stuck here
                 if (res.statusCode === 200) {
                     request(uri).pipe(fs.createWriteStream(filename)).on('close', () => {
                         timeManager.lastDownloadedTime = String(hours + "" + minutes)
                         fs.copySync(filename, './downloadedImage.png');
-                        console.log("lastDownloadedTime updated with: ", timeManager.lastDownloadedTime)
+                        //console.log("lastDownloadedTime updated with: ", timeManager.lastDownloadedTime)
                         timeManager.deductMinutes = 0;
                         resolve();
                     });
@@ -83,15 +84,15 @@ async function downloadImage(filename) {
             })
         });
         const value = await promise1
-        console.log("deductMinutes checker: ", timeManager.deductMinutes)
+        //console.log("deductMinutes checker: ", timeManager.deductMinutes)
         await sleep(5000);
     } while (timeManager.deductMinutes > 0)
 };
 
-console.log("Bot Started @", Date());
+
 //Pre Cached images
 setInterval(() => {
-    console.log("-----Fetching images-----")
+    //console.log("-----Fetching images-----")
     let date_ob = new Date();
     //setting GMT +8
     //date_ob.setHours(date_ob.getHours() + 8)
@@ -109,8 +110,8 @@ setInterval(() => {
 
     downloadImage('./Images/currentWeather.png')
         .then(() => {
-            console.log('Image successfully downloaded @ ', new Date())
-            console.log("currentWeather download done, and exist? -", fs.existsSync('./Images/currentWeather.png'));
+            //console.log('Image successfully downloaded @ ', new Date())
+            //console.log("currentWeather download done, and exist? -", fs.existsSync('./Images/currentWeather.png'));
 
             //setOpacity
             Jimp.read('./Images/currentWeather.png').then(data => {
@@ -128,8 +129,8 @@ setInterval(() => {
                                 .jpeg()
                                 .toFile("./Images/" + timeManager.lastDownloadedTime + ".jpg", () => {
                                     timeManager.lastUpdatedTime = timeManager.lastDownloadedTime;
-                                    console.log("Image merged @", Date());
-                                    console.log("-----Download completed here-----");
+                                    //console.log("Image merged @", Date());
+                                    //console.log("-----Download completed here-----");
                                 })
 
                         })
@@ -140,9 +141,13 @@ setInterval(() => {
     //setting interval at 6mins each time
 }, 180000)
 
+bot.on("ready", function () {
+    console.log("Bot Started @", Date());
+    timeManager.BotStartTime = Date();
+});
 //Documentation
 bot.command("start", "help", (msg, reply) => {
-    reply.text("The following are the commands to check out rain areas in Singapore:\n/rainCheck - Get rain updates\n/setInterval <1-24> - Setting interval updates of rain areas (e.g., /setInterval 1)\n/stopInterval - Terminate interval updates\n/autoAlerts <0-23> - Starting Auto alerts to be sent by the HOUR clock (e.g., /autoAlert 5)\n/stopAutoAlert - Terminating all AutoAlert scheduled\n/findHDBCarpark - Look for the nearest HDB carparks and its details (PRIVATE CHAT ONLY)")
+    reply.text("The following are the commands to check out rain areas in Singapore:\n/rainCheck - Get rain updates\n/setInterval <1-24> - Setting interval updates of rain areas (e.g., /setInterval 1)\n/stopInterval - Terminate interval updates\n/autoAlerts <0-23> - Starting Auto alerts to be sent by the HOUR clock (e.g., /autoAlert 5 or /autoalert 12,14,16)\n/stopAutoAlert - Terminating all AutoAlert scheduled\n/findHDBCarpark - Look for the nearest HDB carparks and its details (PRIVATE CHAT ONLY)")
 })
 
 //basic Rain Area check
@@ -159,7 +164,8 @@ bot.context({
     HoursToAlert: [],
     lastSent: 1,
     presses: 0,
-    msgId: null
+    msgId: null,
+    NotifiedChat: false
 });
 //setting Interval hours to send updates
 bot.command("setInterval", (msg, reply, next) => {
@@ -192,46 +198,81 @@ async function engageLoop(reply, msg) {
 }
 bot.command("stopInterval", (msg, reply, next) => {
     //disable Interval
-    msg.context.onInterval = false;
+    if(msg.context.onInterval === false){
+        reply.text("There is no ongoing interval alerts.")
+        return;
+    };
+    msg.context.onInterval === false
     reply.text("Stopped Interval");
 });
 
 //setting up AutoAlerts by the hour-clock
 bot.command("AutoAlert", (msg, reply, next) => {
-
     console.log("##### " + msg.chat.name, "submitted a request for AutoAlert:", Date(), "#####");
-    //enable Interval
-    if (isNaN(parseInt(msg.args(2))) || parseInt(msg.args(2)) > 24) {
-        reply.text("Your interval duration should be below 24 hours or a number, try again.");
-        return;
-    }
-    else if (msg.context.HoursToAlert.includes(parseInt(msg.args(2)))) {
-        reply.text("Hour " + parseInt(msg.args(2)) + " has already been added.");
-        return;
-    }
-    else {
+    var msgResponseArray = msg.args(2).toString().split(",")
+    if (msgResponseArray.length === 1) {
+        //AutoAlert checks
+        if (isNaN(parseInt(msg.args(2))) || parseInt(msg.args(2)) > 24) {
+            reply.text("Your interval duration should be below 24 hours or a number, try again.");
+            return;
+        }
+        else if (msg.context.HoursToAlert.includes(parseInt(msg.args(2)))) {
+            reply.text("Hour " + parseInt(msg.args(2)) + " has already been added.");
+            return;
+        }
+        else {
+            if (msg.context.HoursToAlert.length < 1) {
+                msg.context.HoursToAlert = [];
+                msg.context.HoursToAlert.push(parseInt(msg.args(2)))
+                reply.text("Adding HOUR " + parseInt(msg.args(2)) + ", into Auto Alert.")
+                reply.text("Starting Auto Alerts")
+                //engage Loop for Interval sendings
+                engageAlert(reply, msg);
+            } else {
+                msg.context.HoursToAlert.push(parseInt(msg.args(2)))
+                reply.text("Adding HOUR " + parseInt(msg.args(2)) + ", into Auto Alert.")
+            }
+        }
+    } else {
         if (msg.context.HoursToAlert.length < 1) {
-
             msg.context.HoursToAlert = [];
-            msg.context.HoursToAlert.push(parseInt(msg.args(2)))
-            reply.text("Adding HOUR " + parseInt(msg.args(2)) + ", into Auto Alert.")
+            var TempArray = [];
+            msgResponseArray.forEach((item) => {
+                if (isNaN(item)) {
+                    reply.text("Your setting does not hold valid numbers below 24 hours or a number, try again.")
+                    return;
+                }
+                TempArray.push(item);
+            })
+            msg.context.HoursToAlert = TempArray;
+            reply.text("Added HOURS: " + TempArray+ ", into Auto Alert.")
             reply.text("Starting Auto Alerts")
             //engage Loop for Interval sendings
             engageAlert(reply, msg);
         } else {
-            msg.context.HoursToAlert.push(parseInt(msg.args(2)))
-            reply.text("Adding HOUR " + parseInt(msg.args(2)) + ", into Auto Alert.")
+            var TempArray = [];
+            msgResponseArray.forEach((item) => {
+                if (isNaN(item)) {
+                    reply.text("Your setting does not hold valid numbers below 24 hours or a number, try again.")
+                    return;
+                }
+                TempArray.push(item);
+            })
+            msg.context.HoursToAlert = TempArray;
+            reply.text("Resetting hours with your setting" + TempArray + ", into Auto Alert.")
         }
     }
+
 })
+
 //Sending AutoAlerts
 async function engageAlert(reply, msg) {
-    console.log("-----Engaing auto alerts-----")
+    //console.log("-----Engaing auto alerts-----")
     while (msg.context.HoursToAlert.length >= 1) {
         //check for time every 15mins
-        await sleep(900000)
+        await sleep(300000)
         if (msg.context.HoursToAlert.length >= 1 && msg.context.HoursToAlert.includes(new Date().getHours()) && new Date().getHours() !== msg.context.lastSent) {
-            console.log("-----Auto alert sent @", Date(), "-----")
+            //console.log("-----Auto alert sent @", Date(), "-----")
             reply.text("Auto alert for rain areas generating...");
             var stream = fs.createReadStream("./Images/" + timeManager.lastUpdatedTime + ".jpg");
             reply.photo(stream, "Here's the latest rain conditions. Last updated @ " + timeManager.lastUpdatedTime + "hrs.");
@@ -241,19 +282,18 @@ async function engageAlert(reply, msg) {
 }
 bot.command("stopAutoAlert", (msg, reply, next) => {
     //disable autoAlerts by clearing array
-    msg.context.HoursToAlert = [];
+    if (msg.context.HoursToAlert === []){
+        reply.text("There is no ongoing Auto alerts.")
+        return;
+    };
+    msg.context.HoursToAlert = []
     reply.text("Auto alerts has been stopped and cleared.");
-    console.log("-----Disengaing auto alerts-----")
+    //console.log("-----Disengaing auto alerts-----")
 });
-bot.command("contextinfo", (msg, reply, next) => {
-    reply.text("onInterval: " + msg.context.onInterval + "\nHoursToAlert: " + msg.context.HoursToAlert + "\nlastSent: " + msg.context.lastSent + "\nPresses: " + msg.context.presses + "\nmsgId: " + msg.context.msgId)
-    console.log(msg.context);
-})
 
 bot.command("findHDBCarpark", (msg, reply, next) => {
     console.log("##### " + msg.chat.name, "submitted a request for findHDBCarpark @", Date(), "#####");
-    console.log('Group type: ' + msg.chat.type)
-    if(msg.chat.type !== "user"){
+    if (msg.chat.type !== "user") {
         reply.text("[INFO] Searching for nearest HDB carparks is available only on private chats.")
         return
     }
@@ -265,13 +305,23 @@ bot.command("findHDBCarpark", (msg, reply, next) => {
     // Display the keyboard
     reply.keyboard(keyboard1, true).text("What are you right now?").then((error, result) => {
         if (error) {
-            console.log("Encountered an error during keyboard creation for user: " + msg.chat.name + " / @" + msg.chat.username)
+            console.error("Encountered an error during keyboard creation for user: " + msg.chat.name + " / @" + msg.chat.username)
             return;
         }
     })
 })
+// bot.command("feedback", (msg, reply) => {
+//     reply.text("Thank you for your feedback and support of the bot.")
+// })
+bot.command("contextinfo", (msg, reply, next) => {
+    reply.text("onInterval: " + msg.context.onInterval + "\nHoursToAlert: " + msg.context.HoursToAlert + "\nlastSent: " + msg.context.lastSent + "\nPresses: " + msg.context.presses + "\nmsgId: " + msg.context.msgId + "\nBot last started: " + timeManager.BotStartTime + "\nBot Datetime: " + Date() + "\nNotifiedChat: " + msg.context.NotifiedChat)
+})
 
 bot.all(function (msg, reply, next) {
+    if(msg.context.NotifiedChat === false){
+        msg.context.NotifiedChat = true;
+        reply.text("[NOTICE] @SG_RainBot has recently been updated, kindly re-setup auto alerts if any.")
+    }
     // If we didn't echo this message, we can't edit it either
     if (!msg.context.msgId === msg.id) return;
     // If this is a text message, edit it
