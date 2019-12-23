@@ -198,7 +198,7 @@ async function engageLoop(reply, msg) {
 }
 bot.command("stopInterval", (msg, reply, next) => {
     //disable Interval
-    if(msg.context.onInterval === false){
+    if (msg.context.onInterval === false) {
         reply.text("There is no ongoing interval alerts.")
         return;
     };
@@ -245,7 +245,7 @@ bot.command("AutoAlert", (msg, reply, next) => {
                 TempArray.push(item);
             })
             msg.context.HoursToAlert = TempArray;
-            reply.text("Added HOURS: " + TempArray+ ", into Auto Alert.")
+            reply.text("Added HOURS: " + TempArray + ", into Auto Alert.")
             reply.text("Starting Auto Alerts")
             //engage Loop for Interval sendings
             engageAlert(reply, msg);
@@ -280,9 +280,10 @@ async function engageAlert(reply, msg) {
         }
     }
 }
+//Stopping autoalerts
 bot.command("stopAutoAlert", (msg, reply, next) => {
     //disable autoAlerts by clearing array
-    if (msg.context.HoursToAlert === []){
+    if (msg.context.HoursToAlert === []) {
         reply.text("There is no ongoing Auto alerts.")
         return;
     };
@@ -316,9 +317,9 @@ bot.command("findHDBCarpark", (msg, reply, next) => {
 bot.command("contextinfo", (msg, reply, next) => {
     reply.text("onInterval: " + msg.context.onInterval + "\nHoursToAlert: " + msg.context.HoursToAlert + "\nlastSent: " + msg.context.lastSent + "\nPresses: " + msg.context.presses + "\nmsgId: " + msg.context.msgId + "\nBot last started: " + timeManager.BotStartTime + "\nBot Datetime: " + Date() + "\nNotifiedChat: " + msg.context.NotifiedChat)
 })
-
 bot.all(function (msg, reply, next) {
-    if(msg.context.NotifiedChat === false){
+    //Disclaimer message
+    if (msg.context.NotifiedChat === false) {
         msg.context.NotifiedChat = true;
         reply.text("[NOTICE] @SG_RainBot has recently been updated, kindly re-setup auto alerts if any.")
     }
