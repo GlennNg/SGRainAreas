@@ -263,7 +263,7 @@ bot.command("AutoAlert", (msg, reply, next) => {
             
             //console.log(TempArray)
             msg.context.HoursToAlert = TempArray;
-            reply.text("Resetting hours with your setting" + TempArray + ", into Auto Alert.")
+            reply.text("Resetting hours with your setting " + TempArray + ", into Auto Alert.")
         }
     }
 
