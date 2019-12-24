@@ -11,10 +11,10 @@ var fs = require('fs-extra');
 var geo = require('./GeoCompute')
 sharp.cache(false);
 
-const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
+//const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
 
 //Testee_botbot
-//const bot = botgram("1031143021:AAEFdSnIkS5pznXPBy9t-N5f5PRqj-p6eC4")
+const bot = botgram("1031143021:AAEFdSnIkS5pznXPBy9t-N5f5PRqj-p6eC4")
 
 var timeManager = {
     //predefined deduction
@@ -242,8 +242,10 @@ bot.command("AutoAlert", (msg, reply, next) => {
                     reply.text("Your setting does not hold valid numbers below 24 hours or a number, try again.")
                     return;
                 }
-                TempArray.push(item);
+                TempArray.push(parseInt(item));
             })
+            
+            //console.log(TempArray)
             msg.context.HoursToAlert = TempArray;
             reply.text("Added HOURS: " + TempArray + ", into Auto Alert.")
             reply.text("Starting Auto Alerts")
@@ -256,8 +258,10 @@ bot.command("AutoAlert", (msg, reply, next) => {
                     reply.text("Your setting does not hold valid numbers below 24 hours or a number, try again.")
                     return;
                 }
-                TempArray.push(item);
+                TempArray.push(parseInt(item));
             })
+            
+            //console.log(TempArray)
             msg.context.HoursToAlert = TempArray;
             reply.text("Resetting hours with your setting" + TempArray + ", into Auto Alert.")
         }
