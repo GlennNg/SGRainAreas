@@ -24,7 +24,7 @@ var timeManager = {
     BotStartTime: null
 };
 
-//useless sleep?!
+//useless sleep
 async function sleep(msec) {
     return new Promise(resolve => setTimeout(resolve, msec));
 }
