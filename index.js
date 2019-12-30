@@ -161,12 +161,13 @@ bot.command("start", "help", (msg, reply) => {
 })
 
 //Documentation
-bot.command("setMOTD", "help", (msg, reply) => {
-    timeManager.motd = msg.args(1);
-    reply.text("MOTD set: " + timeManager.motd)
+bot.command("setMOTD", (msg, reply) => {
+    timeManager.motd = String(msg.args(1)).split("<br/>").join("\n");
+    reply.html("MOTD set:\n" + timeManager.motd)
 })
 
 bot.all(function (msg, reply, next) {
+    console.log(msg)
     if (msg.context.NotifiedChat === 0) {
         msg.context.NotifiedChat = false;
     }
