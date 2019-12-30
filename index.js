@@ -163,7 +163,7 @@ bot.command("start", "help", (msg, reply) => {
 //Documentation
 bot.command("setMOTD", (msg, reply) => {
     timeManager.motd = String(msg.args(1)).split("<br>").join("\n");
-    reply.html("MOTD set:\n" + timeManager.motd)
+    reply.text("MOTD set:\n" + timeManager.motd)
 })
 
 bot.all(function (msg, reply, next) {
@@ -176,7 +176,7 @@ bot.all(function (msg, reply, next) {
         msg.context.NotifiedChat = true;
         reply.text("[NOTICE] @SG_RainBot has recently been updated, kindly re-setup auto alerts if any.\n\nIf you're a rider (bike or bicycle), we have recently developed a new bot that is more inclined to Riders themselves!\n\nCheck out @RidersAssistBot\n\n")
         if (timeManager.motd !== "") {
-            reply.text(timeManager.motd[0])
+            reply.text(timeManager.motd)
         }
     }
     // If we didn't echo this message, we can't edit it either
