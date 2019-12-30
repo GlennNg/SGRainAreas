@@ -162,7 +162,7 @@ bot.command("start", "help", (msg, reply) => {
 
 //Documentation
 bot.command("setMOTD", (msg, reply) => {
-    timeManager.motd = String(msg.args(1)).split("<br/>").join("\n");
+    timeManager.motd = String(msg.args(1)).split("<br>").join("\n");
     reply.html("MOTD set:\n" + timeManager.motd)
 })
 
