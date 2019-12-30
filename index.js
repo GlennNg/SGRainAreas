@@ -223,14 +223,14 @@ bot.command("rainCheck", (msg, reply, next) => {
 bot.command("setInterval", (msg, reply, next) => {
     console.log("##### " + msg.from.username + " submitted a request interval updates on:", Date(), "#####");
     //enable Interval
-    if (msg.context.onInterval > 0) {
+    if (isNaN(parseInt(msg.args(2))) || parseInt(msg.args(2)) > 24 || parseInt(msg.args(2)) < 1) {
+        reply.text("Your interval duration should be above 0, below 24 hours and is a number, try again.");
+        return;
+    }
+    else if (msg.context.onInterval > 0) {
         msg.context.onInterval = parseInt(msg.args(2))
         reply.silent(true).text("Ongoing interval update found, setting interval value with latest value.")
 
-    }
-    else if (isNaN(parseInt(msg.args(2))) || parseInt(msg.args(2)) > 24 || parseInt(msg.args(2)) < 1) {
-        reply.text("Your interval duration should be above 0, below 24 hours and is a number, try again.");
-        return;
     }
     else {
         msg.context.onInterval = parseInt(msg.args(2))
@@ -275,6 +275,7 @@ bot.command("stopInterval", (msg, reply, next) => {
     };
     msg.context.onInterval = 0
     reply.silent(true).text("Interval alerts has been stopped and cleared.");
+    return;
 });
 
 //setting up AutoAlerts by the hour-clock
@@ -403,11 +404,11 @@ bot.command("findHDBCarpark", (msg, reply, next) => {
 // bot.command("feedback", (msg, reply) => {
 //     reply.text("Thank you for your feedback and support of the bot.")
 // })
-bot.command("contextinfo", (msg, reply, next) => {
+bot.command("diag", (msg, reply, next) => {
     reply.text("onInterval: " + msg.context.onInterval + "\nHoursToAlert: " + msg.context.HoursToAlert + "\nlastSent: " + msg.context.lastSent + "\nmsgId: " + msg.context.msgId + "\nBot last started: " + timeManager.BotStartTime + "\nBot Datetime: " + Date() + "\nNotifiedChat: " + msg.context.NotifiedChat)
 })
 
 //any other commands
-bot.command((msg, reply) => {
-    reply.silent(true).text("Please refer to the commands available from /start");
-})
+// bot.command((msg, reply) => {
+//     reply.silent(true).text("Please refer to the commands available from /start");
+// })
