@@ -11,10 +11,10 @@ var fs = require('fs-extra');
 var geo = require('./GeoCompute')
 sharp.cache(false);
 
-const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
+//const bot = botgram("1016820507:AAEB2FIcO-tvMkGRVykdDYUq-hnuht7uWNA")
 
 //Testee_botbot
-//const bot = botgram("1031143021:AAEFdSnIkS5pznXPBy9t-N5f5PRqj-p6eC4")
+const bot = botgram("1031143021:AAEFdSnIkS5pznXPBy9t-N5f5PRqj-p6eC4")
 
 var timeManager = {
     //predefined deduction
@@ -167,7 +167,7 @@ bot.command("setMOTD", (msg, reply) => {
 })
 
 bot.all(function (msg, reply, next) {
-    console.log(msg)
+    //console.log(msg)
     if (msg.context.NotifiedChat === 0) {
         msg.context.NotifiedChat = false;
     }
@@ -374,7 +374,7 @@ async function engageAlert(reply, msg) {
 //Stopping autoalerts
 bot.command("stopAutoAlert", (msg, reply, next) => {
     //disable autoAlerts by clearing array
-    if (msg.context.HoursToAlert === [] || "undefined" !== typeof (msg.context["HoursToAlert"])) {
+    if (msg.context.HoursToAlert.length ===0) {
         reply.silent(true).text("There is no ongoing Auto alerts.")
         return;
     };
